@@ -145,20 +145,34 @@
 {A tabela de eventos, depois das transformações descritas na Seção 2, registra os rompimentos ocorridos na operação, com cada evento associado a um lote, um material e um fornecedor. A pergunta a responder é se algum desses agrupamentos apresenta frequência de rompimento acima da referência observada para o seu contexto.}
 %
 
-{A abordagem adotada é estatística descritiva sobre o histórico observado, sem qualquer modelo preditivo. A justificativa é direta. Como a tabela não traz rótulo confiável de causa por evento, não há alvo supervisionado para treinar um classificador. O que existe é o registro fatual de que rompimentos aconteceram em certos contextos, e a hipótese implícita de que contextos com taxa anormalmente alta de rompimento merecem investigação como suspeita de matéria-prima defeituosa. A análise traduz essa hipótese em uma medida quantitativa, sem afirmar causalidade, e devolve para o especialista uma classificação ordinal que ele pode interpretar e contestar.}
+{A abordagem é estatística descritiva sobre o histórico observado, sem modelo preditivo. Como a tabela não traz rótulo de causa por evento, não há alvo supervisionado para treinar um classificador. A análise traduz em uma medida quantitativa a hipótese de que contextos com taxa de rompimento acima da referência merecem investigação como suspeita de matéria-prima, e devolve ao especialista uma classificação ordinal que ele pode interpretar e contestar.}
 %
 
-{O cálculo se organiza em torno de uma normalização por exposição. A taxa bruta de rompimento de um lote sobre um material é definida como o número de rompimentos atribuídos a esse lote dividido pelo número de horas em que o lote esteve em produção naquele material. Essa taxa bruta é então comparada com uma referência histórica do próprio material, calculada como a razão entre o total de rompimentos do material e o total de horas de exposição do material, agregada sobre todos os lotes observados. A razão entre a taxa do lote e a referência do material produz uma taxa relativa, adimensional, que expressa o quanto o lote rompe a mais ou a menos do que o esperado para aquele material. Lotes que processam mais de um material recebem uma taxa relativa final calculada como média ponderada das taxas relativas por material, com pesos proporcionais às horas de exposição em cada um.}
+{O cálculo se organiza em torno de uma normalização por exposição. A taxa bruta de rompimento de um lote sobre um material é o número de rompimentos atribuídos ao lote dividido pelas horas em que o lote esteve em produção naquele material. A taxa bruta é comparada com uma referência histórica do próprio material, calculada como a razão entre o total de rompimentos e o total de horas de exposição do material sobre todos os lotes observados. A razão entre a taxa do lote e a referência do material produz uma taxa relativa adimensional, que expressa o quanto o lote rompe acima ou abaixo do esperado. Lotes que processam mais de um material recebem uma taxa relativa final calculada como média ponderada das taxas relativas por material, com pesos proporcionais às horas de exposição em cada um.}
 %
 
-{A taxa relativa final é então traduzida em uma classificação por faixas, derivada do percentil empírico do lote na distribuição de todos os lotes analisados. Lotes acima de certo percentil entram em \textsc{ALTO RISCO}. Faixas intermediárias produzem \textsc{RISCO ELEVADO}, \textsc{RISCO NORMAL} e \textsc{BAIXO RISCO}. O uso de faixas em vez de um número contínuo serve a uma necessidade prática do laudo de produção, que precisa entregar ao especialista uma indicação acionável, e não um escore que ele teria que interpretar sozinho. Os cortes de percentil são parâmetros do sistema, centralizados e ajustáveis pelo time da fábrica conforme a calibração se refine no uso.}
+{A taxa relativa final é traduzida em uma classificação por faixas, derivada do percentil empírico do lote na distribuição de todos os lotes analisados. Lotes acima de certo percentil entram em \textsc{ALTO RISCO}. Faixas intermediárias produzem \textsc{RISCO ELEVADO}, \textsc{RISCO NORMAL} e \textsc{BAIXO RISCO}. O uso de faixas em vez de um escore contínuo entrega ao especialista uma indicação ordinal de prioridade. Os cortes de percentil são parâmetros centralizados, ajustáveis pelo time da fábrica.}
 %
 
-{Há três coisas que essa abordagem não consegue afirmar. Não estabelece causalidade, apenas associação estatística. Um lote pode aparecer com taxa relativa alta por motivos que não têm a ver com a sua qualidade intrínseca, como atribuição equivocada de rompimento ou regulagens limítrofes da máquina. Não captura nenhum sinal sobre o estado operacional das máquinas, que é o domínio da análise descrita na Seção 3.1. E não cobre lotes com exposição muito baixa, que entram em uma faixa específica de \textsc{INDETERMINADO} porque a estimativa de taxa, com poucas horas, fica dominada pelo ruído amostral.}
+{Essa abordagem não resolve três questões. Não estabelece causalidade, apenas associação estatística. Um lote pode aparecer com taxa relativa alta por motivos não relacionados à sua qualidade intrínseca, como atribuição equivocada de rompimento ou regulagens limítrofes da máquina. Não capta sinal sobre o estado operacional das máquinas, que é o domínio da análise descrita na Seção 3.1. E não cobre lotes com exposição baixa, que recebem o rótulo \textsc{INDETERMINADO} porque a estimativa de taxa fica dominada pelo ruído amostral.}
 %
-\subsection{Pilar MP:}
 
-\subsubsection{Unidade de Análise e Fontes de Dados}
+\subsection{Cruzamento entre máquinas como reforço de evidência}
+%
+{A análise descrita em 3.2 trata cada lote individualmente, sem considerar quantas máquinas diferentes processaram o mesmo lote ao longo da operação. Esse fator é relevante porque, quando um lote causa rompimentos em máquinas distintas, a hipótese de matéria-prima como causa comum ganha sustentação relativa em relação à hipótese de falha localizada em uma máquina específica. Esta subseção descreve a métrica que captura esse padrão.}
+%
+
+{A métrica é um escore de cruzamento construído a partir do histórico do lote sobre o conjunto de máquinas que efetivamente o processaram. O escore combina dois fatores. O primeiro é a fração de máquinas com rompimento sobre o total de máquinas que receberam o lote, e expressa o quanto o problema se espalhou pelo parque. O segundo é uma penalização que reduz o escore quando o lote circulou por poucas máquinas, e impede que lotes restritos a uma única máquina apareçam como evidência de cruzamento.}
+%
+
+{O escore final é traduzido em faixas ordinais. Lotes sem cruzamento observado recebem o rótulo \textsc{SEM CRUZAMENTO}. Lotes com cruzamento mínimo recebem \textsc{CRUZAMENTO MUITO FRACO}, intencionalmente fora do limiar de ativação do sinal. Lotes com cruzamento progressivamente maior recebem \textsc{CRUZAMENTO FRACO}, \textsc{CRUZAMENTO MODERADO} e \textsc{CRUZAMENTO FORTE}. O sinal de cruzamento ativo é definido apenas para as três últimas faixas. Essa escolha deixa de fora os casos em que o padrão observado é compatível com flutuação amostral, e evita ruído na matriz de decisão descrita na próxima seção.}
+%
+
+{O papel da métrica no método é o de reforço de evidência. Ela não opera de forma autônoma sobre a tabela de eventos, e sim em conjunto com a faixa de risco relativa descrita em 3.2. Quando um lote já apresenta taxa relativa alta e ao mesmo tempo mostra cruzamento entre máquinas, a hipótese de matéria-prima ganha plausibilidade adicional. Quando o lote apresenta taxa relativa alta sem cruzamento, a evidência fica restrita ao desempenho do lote em uma máquina específica e a interpretação se mantém mais cautelosa.}
+%
+
+{Essa abordagem não resolve duas questões. Não captura a natureza física do defeito, apenas o padrão estatístico de distribuição entre máquinas. E não se aplica a lotes que processaram em uma única máquina, que são informativamente equivalentes a casos isolados e ficam fora do alcance da métrica por construção.}
+%
 
 
 \bibliographystyle{sbc}
