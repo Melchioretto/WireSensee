@@ -185,7 +185,7 @@ Este artigo propõe uma arquitetura híbrida de ciência de dados para apoiar a 
 
 \section{Arquitetura integrada}
 %
-{As três técnicas descritas na Seção 3 operam sobre tabelas distintas e produzem sinais independentes, cada um com sua própria semântica e suas próprias limitações. A arquitetura proposta combina esses sinais em uma inferência integrada da origem provável de cada rompimento, preservando a rastreabilidade da evidência que sustenta cada classificação~\todocite{rastreabilidade / explicabilidade em pipelines industriais de diagnóstico}.}
+{As três técnicas descritas na Seção 3 operam sobre tabelas distintas e produzem sinais independentes, cada um com sua própria semântica e suas próprias limitações. A arquitetura proposta combina esses sinais em uma inferência integrada da origem provável de cada rompimento, preservando a rastreabilidade da evidência que sustenta cada classificação~\cite{CALAON2024365}.}
 %
 
 {O pipeline se organiza em três camadas. A camada base prepara as tabelas conforme descrito na Seção 2. A camada de análise aplica em paralelo as três técnicas da Seção 3 e produz, para cada evento de rompimento, uma flag de anomalia da máquina, uma faixa de risco relativo do lote e uma faixa de cruzamento entre máquinas. A camada de integração consome esses três sinais por meio de uma matriz de decisão.}
