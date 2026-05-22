@@ -62,11 +62,11 @@
 %
 
 %
-{O cenário descrito configura um problema de ciência de dados aplicada. As informações disponíveis sobre o comportamento das máquinas e sobre os eventos que interrompem a produção permitem o uso combinado de diferentes famílias de técnicas. Uma família opera sobre dados sensoriais e caracteriza o comportamento operacional de cada máquina. Outra opera sobre o histórico de eventos e produz análises descritivas organizadas pelas entidades de produção associadas a cada ocorrência. A escolha de cada família depende da estrutura da fonte de dados correspondente e do tipo de pergunta que ela é capaz de sustentar.}
+{O cenário descrito configura um problema de ciência de dados aplicada. A questão metodológica central é como combinar dados sensoriais multivariados e histórico de eventos, ambos sem rótulo confiável de causa, para produzir uma inferência rastreável sobre a origem provável de cada rompimento. Diferentes famílias de técnicas se ajustam a cada fonte de dado. Uma opera sobre dados sensoriais e caracteriza o comportamento operacional da máquina. Outra opera sobre o histórico de eventos e produz análises descritivas organizadas pelas entidades de produção associadas a cada ocorrência.}
 %
 
 %
-{Este artigo propõe uma arquitetura híbrida de ciência de dados para apoiar a inferência da origem provável dos rompimentos. As técnicas são organizadas em torno do tipo de dado sobre o qual cada uma opera, e a opção por abordagens não supervisionadas é justificada pela ausência de rótulo confiável de causa no nível do evento. A arquitetura proposta integra os sinais produzidos pelas técnicas em um apoio rastreável ao diagnóstico, sem reivindicar causalidade. O escopo deste artigo é metodológico, sem avaliação empírica em instalação específica, e a contribuição central é a composição entre técnicas distintas em uma arquitetura interpretável.}
+{Este artigo propõe uma arquitetura híbrida de ciência de dados que integra detecção de anomalia operacional sobre dados sensoriais, estimativa de risco histórico relativo por lote e material, e análise do cruzamento do lote entre máquinas, combinando esses três sinais em uma matriz de decisão rastreável. A opção por abordagens não supervisionadas é justificada pela ausência de rótulo confiável de causa no nível do evento. O escopo é metodológico, sem avaliação empírica em instalação específica, e a contribuição central é a composição desses sinais em um apoio rastreável ao diagnóstico, sem reivindicar causalidade.}
 %--------------------------------------------------------------------------------------------
 
 \section{Dados disponíveis}
@@ -78,13 +78,13 @@
 \begin{minipage}[b]{0.5\linewidth}
     \centering
     \includegraphics[width=1\linewidth]{Figuras/TabelaStatus.pdf}
-    \caption{Representação visual da tabela de Status}
+    \caption{Representação visual da tabela de status.}
     \label{fig:tabelastatus}
 \end{minipage}%
 \begin{minipage}[b]{0.5\linewidth}
      \centering
     \includegraphics[width=1\linewidth]{Figuras/Sensores.pdf}
-    \caption{Representação visual da tabela de Sensores}
+    \caption{Representação visual da tabela de sensores.}
     \label{fig:tabelasensores}
 \end{minipage}
 \end{figure}
@@ -117,7 +117,7 @@
 %
 
 %
-{Ao final dessas transformações, as duas tabelas convergem para um formato compatível com os métodos descritos na próxima seção. A tabela de eventos sustenta análises descritivas e estimativas de risco relativo agregadas por entidades de produção. A tabela de sensores sustenta a caracterização do comportamento esperado de cada combinação de máquina e material e a identificação de desvios em relação a esse comportamento. A ausência, em ambas as tabelas, de um rótulo confiável de causa por evento é o elemento que afasta o problema das técnicas supervisionadas e justifica a opção pelas abordagens não supervisionadas discutidas a seguir.}
+{Ao final dessas transformações, as duas tabelas convergem para um formato compatível com os métodos da próxima seção. A tabela de sensores permite detectar comportamento operacional atípico, a tabela de eventos permite estimar risco histórico por lote e material, e a associação entre o lote e o conjunto de máquinas que o processaram permite medir o espalhamento do problema. A ausência, em ambas as tabelas, de rótulo confiável de causa por evento afasta o problema das técnicas supervisionadas e justifica a opção pelas abordagens não supervisionadas discutidas a seguir.}
 %--------------------------------------------------------------------------------------------
 
 \section{Técnicas e justificativa}
@@ -131,16 +131,16 @@
 %
 
 %
-{O algoritmo escolhido é o \textit{Isolation Forest}~\cite{Liu2008}, baseado em ensembles de árvores de isolamento. O algoritmo constrói partições aleatórias do espaço das variáveis monitoradas e atribui a cada observação um escore proporcional à facilidade de isolá-la das demais. Observações fáceis de isolar tendem a ser raras na distribuição treinada e recebem escores compatíveis com anomalia. A escolha do método se apoia em três propriedades. Primeiro, opera de forma estritamente não supervisionada, o que se ajusta à ausência de rótulo de causa identificada na seção anterior. Segundo, sua complexidade é linear no número de observações e robusta à dimensionalidade efetiva, o que torna o treinamento tratável em volumes industriais. Terceiro, não assume distribuição paramétrica nas variáveis monitoradas, o que importa em um conjunto de medidas físicas com escalas e perfis distintos.}
+{O algoritmo escolhido é o \textit{Isolation Forest}~\cite{Liu2008}, baseado em ensembles de árvores de isolamento. O algoritmo constrói partições aleatórias do espaço das variáveis monitoradas e atribui a cada observação um escore proporcional à facilidade de isolá-la das demais. Observações fáceis de isolar tendem a ser raras na distribuição treinada e recebem escores compatíveis com anomalia. A escolha do método se apoia em três propriedades. Primeiro, opera de forma estritamente não supervisionada, o que se ajusta à ausência de rótulo de causa identificada na seção anterior. Segundo, apresenta custo computacional adequado para volumes industriais e pode ser aplicado a conjuntos multivariados de sensores, desde que precedido por preparação adequada das variáveis. Terceiro, não assume distribuição paramétrica nas variáveis monitoradas, o que importa em um conjunto de medidas físicas com escalas e perfis distintos.}
 %
 
 {O treinamento é estratificado por combinação de máquina e material. Em vez de um modelo global para toda a fábrica, treina-se um \textit{Isolation Forest} independente para cada combinação observada. A justificativa é que o comportamento operacional esperado da máquina varia sistematicamente conforme o material processado. Misturar populações com perfis distintos em um modelo único diluiria o sinal de anomalia, já que o algoritmo passaria a considerar normal a união dos padrões. A estratificação preserva a noção de comportamento esperado relevante para cada combinação, ao custo de exigir um histórico mínimo de observações para cada uma.}
 %
 
-{O escore do \textit{Isolation Forest} é calculado por leitura, mas a unidade de análise adotada é o bloco contínuo de operação, definido como um intervalo ininterrupto de produção da mesma máquina, sobre o mesmo material, ordem e lote, sem retomada após parada. Cada bloco recebe um escore agregado, dado por uma estatística de cauda dos escores das leituras que o compõem, e em seguida transformado em percentil empírico contra o histórico de blocos da mesma combinação. A agregação reduz a sensibilidade a leituras isoladas e torna o escore comparável entre combinações de tamanhos diferentes.}
+{O escore é calculado por leitura, mas a unidade de análise adotada é o bloco contínuo de operação, definido como um intervalo ininterrupto de produção da mesma máquina, sobre o mesmo material, ordem e lote, sem retomada após parada. Cada bloco recebe um escore agregado, dado por uma estatística de cauda dos escores das leituras, transformado em percentil empírico contra o histórico de blocos da mesma combinação. Essa agregação evita decisões baseadas em leituras isoladas e torna o escore comparável entre combinações de tamanhos diferentes.}
 %
 
-{A associação entre cada rompimento e um bloco de operação é feita \textit{a posteriori}. Para cada evento, identifica-se o bloco de operação imediatamente anterior na mesma combinação de máquina e material, dentro de uma janela temporal de tolerância. O bloco identificado fornece o contexto operacional que sustenta o sinal de anomalia atribuído ao evento. Rompimentos sem bloco compatível ou sem modelo treinado para a combinação correspondente recebem rótulos próprios, distintos do rótulo de ausência de anomalia, para preservar a transparência da decisão.}
+{A associação entre cada rompimento e um bloco é feita \textit{a posteriori}, identificando-se o bloco de operação imediatamente anterior na mesma combinação de máquina e material, dentro de uma janela temporal de tolerância. Rompimentos sem bloco compatível ou sem modelo treinado recebem rótulos próprios, distintos do rótulo de ausência de anomalia, para preservar a transparência da decisão.}
 %
 
 {Três limitações precisam ser explicitadas. Primeiro, o escore agregado é multivariado e não decomposto por variável, portanto o método não identifica isoladamente qual sensor mais contribuiu para um valor elevado. Segundo, um escore anômalo não prova que o desvio operacional tenha causado o rompimento, apenas indica que o estado da máquina no entorno do evento foi atípico para aquela combinação. Terceiro, combinações de máquina e material sem histórico suficiente para o treinamento ficam fora da cobertura do método.}
@@ -187,7 +187,7 @@
 {O pipeline se organiza em três camadas. A camada base prepara as tabelas conforme descrito na Seção 2. A camada de análise aplica em paralelo as três técnicas da Seção 3 e produz, para cada evento de rompimento, três sinais. O primeiro é uma flag de anomalia da máquina, derivada do \textit{Isolation Forest} aplicado ao bloco operacional associado. O segundo é uma faixa de risco relativo do lote, derivada da estatística histórica normalizada por exposição. O terceiro é uma faixa de cruzamento entre máquinas, derivada do escore de espalhamento do lote pelo parque. A camada de integração consome esses três sinais por meio de uma matriz de decisão.}
 %
 
-{A matriz de decisão é apresentada na Figura~\ref{fig:tabeladecisao}. Cada célula traduz uma combinação dos três sinais em um rótulo que indica a suspeita predominante entre evidência compatível com matéria-prima, evidência compatível com equipamento ou cenário inconclusivo. A flag de anomalia da máquina exerce papel duplo na matriz. Quando ela é positiva, sustenta diretamente a suspeita associada a equipamento. Quando ela é negativa, na presença de sinal estatístico compatível com matéria-prima, atua como reforço que eleva a confiança da suspeita de matéria-prima, justamente pelo enfraquecimento concorrente da hipótese de equipamento.}
+{A matriz de decisão é apresentada na Figura~\ref{fig:tabeladecisao}. Cada célula traduz uma combinação dos três sinais em um rótulo que indica a suspeita predominante entre evidência compatível com matéria-prima, evidência compatível com equipamento ou cenário inconclusivo. A matriz é interpretada condicionada à flag de anomalia operacional do bloco anterior ao rompimento. Quando a flag é positiva, a hipótese de equipamento ganha prioridade. Quando a flag é negativa e os sinais históricos do lote são elevados, a suspeita de matéria-prima é reforçada pelo enfraquecimento concorrente da hipótese de equipamento.}
 %
 
 \begin{figure}[ht]
@@ -197,7 +197,7 @@
 \label{fig:tabeladecisao}
 \end{figure}
 
-{A matriz não entrega uma verdade causal sobre o evento, mas uma suspeita predominante rastreável até as evidências quantitativas que a sustentaram. Cada classificação pode ser auditada pelo especialista a partir dos três sinais de entrada e da linha correspondente da matriz, o que possibilita revisão caso a caso e calibração contínua dos limiares descritos nas subseções da Seção 3.}
+{A matriz não entrega uma verdade causal, mas uma suspeita predominante rastreável até as evidências quantitativas que a sustentaram, e cada classificação pode ser auditada pelo especialista a partir dos três sinais de entrada. Os limiares e faixas da matriz são parametrizáveis, o que permite calibração posterior a partir da revisão de especialistas e de evidências externas de qualidade.}
 %
 
 \section{Resultados esperados e considerações finais}
@@ -208,7 +208,7 @@
 {A validação empírica em uma instalação específica está fora do escopo deste artigo, cuja contribuição é metodológica. Em trabalhos derivados, o plano envolve o confronto prospectivo dos rótulos produzidos contra fontes externas de qualidade, em particular o relatório de devoluções da operação. Esse confronto permitirá calibrar os limiares descritos na Seção 3 e estimar a precisão dos rótulos atribuídos pela matriz de decisão.}
 %
 
-{A contribuição metodológica deste artigo é a composição entre técnicas não supervisionadas distintas, escolhidas para se ajustarem à natureza de cada fonte de dado disponível, em uma arquitetura híbrida e interpretável de apoio à inferência da origem provável dos rompimentos~\todocite{arquitetura híbrida não supervisionada em manufatura / AIOps industrial}. A generalização da abordagem para outras linhas de produção com perfil semelhante de dados depende da disponibilidade das duas tabelas e da estabilidade operacional necessária para alimentar a estatística histórica e o treinamento dos modelos sensoriais.}
+{A contribuição metodológica deste artigo é a integração entre detecção de anomalias não supervisionada sobre dados sensoriais e métricas estatísticas descritivas sobre histórico de eventos, organizada em uma arquitetura rastreável de apoio à inferência da origem provável dos rompimentos~\todocite{arquitetura híbrida não supervisionada em manufatura / AIOps industrial}. Diante da ausência de rótulo confiável de causa, a arquitetura prioriza interpretabilidade e auditabilidade, com limiares parametrizáveis que admitem calibração futura. A abordagem é aplicável a outras linhas com perfil semelhante de dados, desde que disponíveis as duas tabelas e a estabilidade operacional necessária para alimentar a estatística histórica.}
 %
 
 
