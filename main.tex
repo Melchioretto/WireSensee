@@ -34,7 +34,7 @@
 
 \sloppy
 
-\title{WireSense}
+\title{Uma Arquitetura Híbrida de Ciência de Dados para Inferência da Origem Provável de Rompimentos em Linhas de Fabricação de Fios}
 
 \author{Vitor Melchioretto\inst{1},Yuji Yamada Correa\inst{2}}
 
@@ -42,13 +42,16 @@
 \address{Universidade do Estado de Santa Catarina
   (UDESC)\\
   Rua Paulo Malschitzki, 200 -- 89.219-710 -- Joinville -- SC -- Brazil
-  \email{vitor.melchioretto@edu.udesc.br, xxx@xxx.xx.x}
+  \email{vitor.melchioretto@edu.udesc.br, yuji.yc01@edu.udesc.br}
 }
 
 \begin{document}
 
 \maketitle
 
+\begin{resumo}
+Este artigo propõe uma arquitetura híbrida de ciência de dados para apoiar a inferência da origem provável de rompimentos em processos industriais de fabricação de fios. Sobre uma tabela de eventos e uma tabela de séries sensoriais, ambas sem rótulo confiável de causa, a arquitetura aplica detecção de anomalias não supervisionada por meio do \textit{Isolation Forest}, estimativa de risco histórico relativo por lote e material, e análise do cruzamento do lote entre máquinas. Os três sinais são combinados em uma matriz de decisão rastreável que entrega ao especialista um rótulo de suspeita predominante acompanhado das evidências quantitativas que o sustentam. A contribuição é metodológica, sem avaliação empírica em instalação específica.
+\end{resumo}
 
 
 %--------------------------------------------------------------------------------------------
