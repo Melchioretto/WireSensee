@@ -121,7 +121,7 @@ Este artigo propõe uma arquitetura híbrida de ciência de dados para apoiar a 
 %
 
 %
-{A ausência, em ambas as tabelas, de rótulo confiável de causa por evento afasta o problema das técnicas supervisionadas e justifica a opção pelas abordagens não supervisionadas discutidas a seguir.}
+{A ausência, em ambas as tabelas, de rótulo confiável de causa por evento afasta o problema das técnicas supervisionadas tradicionais e justifica o uso combinado de detecção não supervisionada e métricas estatísticas descritivas.}
 %--------------------------------------------------------------------------------------------
 
 \section{Técnicas e justificativa}
@@ -185,10 +185,10 @@ Este artigo propõe uma arquitetura híbrida de ciência de dados para apoiar a 
 
 \section{Arquitetura integrada}
 %
-{As três técnicas descritas na Seção 3 operam sobre tabelas distintas e produzem sinais independentes, cada um com sua própria semântica e suas próprias limitações. A arquitetura proposta combina esses sinais em uma inferência integrada da origem provável de cada rompimento, preservando a rastreabilidade da evidência que sustenta cada classificação~\cite{CALAON2024365}.}
+{Os três componentes analíticos descritos na Seção 3 operam sobre tabelas distintas e produzem sinais independentes, cada um com sua própria semântica e suas próprias limitações. A arquitetura proposta combina esses sinais em uma inferência integrada da origem provável de cada rompimento, preservando a rastreabilidade da evidência que sustenta cada classificação~\cite{CALAON2024365}.}
 %
 
-{O pipeline se organiza em três camadas. A camada base prepara as tabelas conforme descrito na Seção 2. A camada de análise aplica em paralelo as três técnicas da Seção 3 e produz, para cada evento de rompimento, uma flag de anomalia da máquina, uma faixa de risco relativo do lote e uma faixa de cruzamento entre máquinas. A camada de integração consome esses três sinais por meio de uma matriz de decisão.}
+{O pipeline se organiza em três camadas. A camada base prepara as tabelas conforme descrito na Seção 2. A camada de análise aplica em paralelo os três componentes analíticos da Seção 3 e produz, para cada evento de rompimento, uma flag de anomalia da máquina, uma faixa de risco relativo do lote e uma faixa de cruzamento entre máquinas. A camada de integração consome esses três sinais por meio de uma matriz de decisão.}
 %
 
 {A matriz de decisão é apresentada na Figura~\ref{fig:tabeladecisao}. Cada célula traduz uma combinação dos três sinais em um rótulo que indica a suspeita predominante entre evidência compatível com matéria-prima, evidência compatível com equipamento ou cenário inconclusivo. A matriz é interpretada condicionada à flag de anomalia operacional do bloco anterior ao rompimento. Quando a flag é positiva, a hipótese de equipamento ganha prioridade. Quando a flag é negativa e os sinais históricos do lote são elevados, a suspeita de matéria-prima é reforçada pelo enfraquecimento concorrente da hipótese de equipamento.}
