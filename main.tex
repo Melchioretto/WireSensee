@@ -21,12 +21,16 @@
 \usepackage{sbc-template}
 
 \usepackage{graphicx,url}
+\usepackage{xcolor}
 
-\usepackage[brazil]{babel}   
-\usepackage[utf8]{inputenc}  
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
 \usepackage{enumitem}
 
-     
+% Marcador vermelho para indicar onde uma citacao ainda precisa ser inserida.
+\newcommand{\todocite}{{\color{red}\textbf{[\,]}}}
+
+
 \sloppy
 
 \title{WireSense}
@@ -122,7 +126,7 @@
 
 \subsection{Detecção de anomalias multivariada sobre as séries sensoriais}
 %
-{A tabela de sensores, após o tratamento descrito na seção anterior, representa o estado operacional de cada máquina ao longo do tempo. A análise busca identificar se o comportamento da máquina no entorno de um rompimento destoa do padrão observado quando ela operava sem incidente sobre o mesmo material. Trata-se de detecção de anomalias em séries multivariadas sem rótulo, sustentada por abordagem não supervisionada.}
+{A tabela de sensores, após o tratamento descrito na seção anterior, representa o estado operacional de cada máquina ao longo do tempo. A análise busca identificar se o comportamento da máquina no entorno de um rompimento destoa do padrão observado quando ela operava sem incidente sobre o mesmo material. Trata-se de detecção de anomalias em séries multivariadas sem rótulo, sustentada por abordagem não supervisionada~\todocite.}
 %
 
 %
@@ -148,7 +152,7 @@
 {A abordagem é estatística descritiva sobre o histórico observado, sem modelo preditivo. Como a tabela não traz rótulo de causa por evento, não há alvo supervisionado para treinar um classificador. A análise traduz em uma medida quantitativa a hipótese de que contextos com taxa de rompimento acima da referência merecem investigação como suspeita de matéria-prima, e devolve ao especialista uma classificação ordinal que ele pode interpretar e contestar.}
 %
 
-{O cálculo se organiza em torno de uma normalização por exposição. A taxa bruta de rompimento de um lote sobre um material é o número de rompimentos atribuídos ao lote dividido pelas horas em que o lote esteve em produção naquele material. A taxa bruta é comparada com uma referência histórica do próprio material, calculada como a razão entre o total de rompimentos e o total de horas de exposição do material sobre todos os lotes observados. A razão entre a taxa do lote e a referência do material produz uma taxa relativa adimensional, que expressa o quanto o lote rompe acima ou abaixo do esperado. Lotes que processam mais de um material recebem uma taxa relativa final calculada como média ponderada das taxas relativas por material, com pesos proporcionais às horas de exposição em cada um.}
+{O cálculo se organiza em torno de uma normalização por exposição~\todocite. A taxa bruta de rompimento de um lote sobre um material é o número de rompimentos atribuídos ao lote dividido pelas horas em que o lote esteve em produção naquele material. A taxa bruta é comparada com uma referência histórica do próprio material, calculada como a razão entre o total de rompimentos e o total de horas de exposição do material sobre todos os lotes observados. A razão entre a taxa do lote e a referência do material produz uma taxa relativa adimensional, que expressa o quanto o lote rompe acima ou abaixo do esperado. Lotes que processam mais de um material recebem uma taxa relativa final calculada como média ponderada das taxas relativas por material, com pesos proporcionais às horas de exposição em cada um.}
 %
 
 {A taxa relativa final é traduzida em uma classificação por faixas, derivada do percentil empírico do lote na distribuição de todos os lotes analisados. Lotes acima de certo percentil entram em \textsc{ALTO RISCO}. Faixas intermediárias produzem \textsc{RISCO ELEVADO}, \textsc{RISCO NORMAL} e \textsc{BAIXO RISCO}. O uso de faixas em vez de um escore contínuo entrega ao especialista uma indicação ordinal de prioridade. Os cortes de percentil são parâmetros centralizados, ajustáveis pelo time da fábrica.}
@@ -159,7 +163,7 @@
 
 \subsection{Cruzamento entre máquinas como reforço de evidência}
 %
-{A análise descrita em 3.2 trata cada lote individualmente, sem considerar quantas máquinas diferentes processaram o mesmo lote ao longo da operação. Esse fator é relevante porque, quando um lote causa rompimentos em máquinas distintas, a hipótese de matéria-prima como causa comum ganha sustentação relativa em relação à hipótese de falha localizada em uma máquina específica. Esta subseção descreve a métrica que captura esse padrão.}
+{A análise descrita em 3.2 trata cada lote individualmente, sem considerar quantas máquinas diferentes processaram o mesmo lote ao longo da operação. Esse fator é relevante porque, quando um lote causa rompimentos em máquinas distintas, a hipótese de matéria-prima como causa comum ganha sustentação relativa em relação à hipótese de falha localizada em uma máquina específica. Esta subseção descreve a métrica que captura esse padrão~\todocite.}
 %
 
 {A métrica é um escore de cruzamento construído a partir do histórico do lote sobre o conjunto de máquinas que efetivamente o processaram. O escore combina dois fatores. O primeiro é a fração de máquinas com rompimento sobre o total de máquinas que receberam o lote, e expressa o quanto o problema se espalhou pelo parque. O segundo é uma penalização que reduz o escore quando o lote circulou por poucas máquinas, e impede que lotes restritos a uma única máquina apareçam como evidência de cruzamento.}
@@ -172,6 +176,38 @@
 %
 
 {Essa abordagem não resolve duas questões. Não captura a natureza física do defeito, apenas o padrão estatístico de distribuição entre máquinas. E não se aplica a lotes que processaram em uma única máquina, que são informativamente equivalentes a casos isolados e ficam fora do alcance da métrica por construção.}
+%
+
+\section{Arquitetura integrada}
+%
+{As três técnicas descritas na Seção 3 operam sobre tabelas distintas e produzem sinais independentes. A arquitetura proposta combina esses sinais em um diagnóstico único por evento, preservando rastreabilidade da evidência que sustenta cada classificação~\todocite.}
+%
+
+{O pipeline se organiza em três camadas. A camada base prepara as tabelas conforme descrito na Seção 2. A camada de análise aplica em paralelo as três técnicas, gerando para cada evento uma flag de anomalia de máquina, uma faixa de risco relativo do lote e uma faixa de cruzamento entre máquinas. A camada de integração consome essas três entradas por meio de uma matriz de decisão.}
+%
+
+{A matriz de decisão é apresentada na Figura~\ref{fig:tabeladecisao}. Cada célula traduz uma combinação de sinais em um rótulo, que indica a suspeita predominante entre matéria-prima, equipamento ou cenário inconclusivo. A matriz incorpora uma regra de reforço pela qual a ausência de anomalia de máquina, na presença de sinal estatístico compatível com matéria-prima, eleva a confiança da suspeita.}
+%
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.75\linewidth]{Figuras/TabelaDecisao.pdf}
+\caption{Matriz de decisão do diagnóstico integrado.}
+\label{fig:tabeladecisao}
+\end{figure}
+
+{Cada classificação produzida pode ser explicada pelas três evidências de entrada e pela linha correspondente da matriz, o que possibilita revisão humana e calibração dos limiares descritos nas subseções da Seção 3.}
+%
+
+\section{Resultados esperados e considerações finais}
+%
+{A aplicação do método produz, por evento de rompimento, um rótulo de diagnóstico acompanhado das evidências quantitativas que o sustentam. As evidências incluem o bloco de operação associado, o escore de anomalia, a taxa relativa do lote, seu percentil e a faixa de cruzamento entre máquinas. Esse conjunto permite que o especialista revise a classificação caso a caso, em vez de receber apenas um veredito opaco.}
+%
+
+{A validação empírica em uma instalação específica fica fora do escopo deste artigo. Em trabalhos derivados, o plano envolve confronto prospectivo dos rótulos produzidos contra fontes externas de qualidade, em particular o relatório de devoluções da operação. Esse confronto permitirá calibrar os limiares descritos na Seção 3 e estimar a precisão dos rótulos da matriz de decisão.}
+%
+
+{O posicionamento defendido é o de uma arquitetura híbrida, na qual técnicas não supervisionadas distintas, escolhidas para se ajustarem à natureza de cada fonte de dado disponível, se integram em um diagnóstico rastreável e interpretável~\todocite. A generalização da abordagem para outras linhas de produção com perfil semelhante de dados depende apenas da disponibilidade das duas tabelas e da estabilidade operacional necessária para alimentar a estatística histórica.}
 %
 
 
