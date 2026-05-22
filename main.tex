@@ -194,9 +194,9 @@ Este artigo propõe uma arquitetura híbrida de ciência de dados para apoiar a 
 {A matriz de decisão é apresentada na Figura~\ref{fig:tabeladecisao}. Cada célula traduz uma combinação dos três sinais em um rótulo que indica a suspeita predominante entre evidência compatível com matéria-prima, evidência compatível com equipamento ou cenário inconclusivo. A matriz é interpretada condicionada à flag de anomalia operacional do bloco anterior ao rompimento. Quando a flag é positiva, a hipótese de equipamento ganha prioridade. Quando a flag é negativa e os sinais históricos do lote são elevados, a suspeita de matéria-prima é reforçada pelo enfraquecimento concorrente da hipótese de equipamento.}
 %
 
-\begin{figure}[H]
+\begin{figure}[!ht]
 \centering
-\includegraphics[width=0.75\linewidth]{Figuras/TabelaDecisao.pdf}
+\includegraphics[width=0.7\linewidth]{Figuras/TabelaDecisao.pdf}
 \caption{Matriz de decisão do diagnóstico integrado.}
 \label{fig:tabeladecisao}
 \end{figure}
